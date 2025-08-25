@@ -23,6 +23,8 @@ services:
       NODE_ENV: production
       # Enable SSL for production database connections
       SSL_MODE: require
+      # Pass through CORS configuration from .env file
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
     # Keep port mapping for VPS deployment (Nginx will proxy to this)
     ports:
       - "3000:3000"

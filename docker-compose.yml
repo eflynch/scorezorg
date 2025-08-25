@@ -23,12 +23,12 @@ services:
   # Application
   app:
     build: .
-    env_file:
-      - ./apps/scorezorg/.env.production
     environment:
       NODE_ENV: production
       # Use environment variable to control SSL mode (disable for local, require for production)
       DATABASE_URL: postgresql://scorezorg:${DB_PASSWORD:-changeme}@postgres:5432/scorezorg?sslmode=${SSL_MODE:-disable}
+      # CORS configuration (defaults to * for development)
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
     ports:
       - "3000:3000"
     depends_on:
