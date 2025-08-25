@@ -39,7 +39,7 @@ export function LeagueProvider({
     }
     const updatedLeague = updater(league);
     setLeague(updatedLeague);
-    const response = await fetch(`http://localhost:3000/api/league/${slug}`,
+    const response = await fetch(`/api/league/${slug}`,
       {
         method: 'PUT',
         headers: {
