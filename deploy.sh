@@ -154,7 +154,23 @@ fi
 
 # Build and start services
 print_status "🏗️ Building and starting services..."
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+print_status "This may take several minutes for the first build..."
+
+# Build with verbose output and timeout
+timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --progress=plain 2>&1 | tee /tmp/docker-build.log || {
+    print_error "Docker build failed or timed out after 10 minutes"
+    print_error "Last 50 lines of build output:"
+    tail -n 50 /tmp/docker-build.log
+    print_error ""
+    print_error "Full build log saved to: /tmp/docker-build.log"
+    print_error ""
+    print_error "Common issues and solutions:"
+    print_error "1. NX hanging: Check if NX daemon is disabled (ENV NX_DAEMON false)"
+    print_error "2. Memory issues: Ensure VPS has at least 1GB RAM"
+    print_error "3. Network timeouts: Retry the deployment script"
+    print_error "4. Build cache issues: Run 'docker system prune -f' and retry"
+    exit 1
+}
 
 # Wait for services to be ready
 print_status "⏳ Waiting for services to start..."
@@ -291,8 +307,11 @@ echo -e "${GREEN}  • Only these domains/IPs can access your API${NC}"
 echo ""
 echo -e "${YELLOW}📊 Useful commands:${NC}"
 echo -e "  • View logs: ${BLUE}docker compose logs -f${NC}"
+echo -e "  • View app logs only: ${BLUE}docker compose logs -f app${NC}"
 echo -e "  • Restart app: ${BLUE}docker compose restart app${NC}"
 echo -e "  • Update app: ${BLUE}cd $REPO_DIR && git pull && docker compose up -d --build${NC}"
+echo -e "  • Debug build issues: ${BLUE}docker compose build --progress=plain app${NC}"
+echo -e "  • Clean Docker cache: ${BLUE}docker system prune -f${NC}"
 echo -e "  • Re-run deployment: ${BLUE}curl -fsSL https://raw.githubusercontent.com/eflynch/scorezorg/main/deploy.sh | bash${NC}"
 echo ""
 echo -e "${GREEN}🔐 Database password saved in: ${BLUE}$REPO_DIR/.env${NC}"
