@@ -137,7 +137,6 @@ print_status "⚙️ Creating production environment configuration..."
 cat > .env << EOF
 # Production environment variables
 DB_PASSWORD=$DB_PASSWORD
-SSL_MODE=require
 ALLOWED_ORIGINS=$ALLOWED_ORIGINS
 # Disable Nx Cloud in production
 NX_CLOUD_DISTRIBUTED_EXECUTION=false

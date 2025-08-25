@@ -25,8 +25,8 @@ services:
     build: .
     environment:
       NODE_ENV: production
-      # Use environment variable to control SSL mode (disable for local, require for production)
-      DATABASE_URL: postgresql://scorezorg:${DB_PASSWORD:-changeme}@postgres:5432/scorezorg?sslmode=${SSL_MODE:-disable}
+      # Internal Docker network doesn't need SSL - already isolated
+      DATABASE_URL: postgresql://scorezorg:${DB_PASSWORD:-changeme}@postgres:5432/scorezorg
       # CORS configuration (defaults to * for development)
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
     ports:

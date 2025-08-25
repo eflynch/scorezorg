@@ -5,11 +5,8 @@
 version: '3.8'
 
 services:
-  # Production database with SSL enabled
+  # Production database configuration
   postgres:
-    environment:
-      # Enable SSL in PostgreSQL for production
-      POSTGRES_INITDB_ARGS: "--ssl=on"
     volumes:
       # Use named volume for data persistence
       - postgres_data:/var/lib/postgresql/data
@@ -21,8 +18,6 @@ services:
   app:
     environment:
       NODE_ENV: production
-      # Enable SSL for production database connections
-      SSL_MODE: require
       # Pass through CORS configuration from .env file
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
     # Keep port mapping for VPS deployment (Nginx will proxy to this)
