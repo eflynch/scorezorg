@@ -18,7 +18,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build the application
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NX_DAEMON=false
+ENV NX_CLOUD_DISTRIBUTED_EXECUTION=false
 RUN npm run build
 
 # Production image, copy all the files and run next
