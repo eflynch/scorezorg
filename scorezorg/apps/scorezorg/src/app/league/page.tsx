@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useLeagueDb } from "../use-league-db";
+import { useLeagueDb } from "@/app/hooks";
 
 export default function League() {
   const router = useRouter();

@@ -1,10 +1,9 @@
 'use client'
  
 import { League } from '@/app/types'
-import { isLeague } from '@/app/validators'
 import { createContext, useEffect, useState } from 'react'
 
-export const LeagueContext = createContext<{ league: League | null; updateLeague: (updater: (league: League) => League) => Promise<League> }>({ league: null, updateLeague: null });
+export const LeagueContext = createContext<{ league: League | null; updateLeague: ((updater: (league: League) => League) => Promise<League>) | null }>({ league: null, updateLeague: null });
 
 export function LeagueProvider({
   children,
@@ -20,9 +19,11 @@ export function LeagueProvider({
       try {
         const res = await fetch(`http://localhost:3000/api/league/${slug}`);
         const data = await res.json();
-        if (res.status !== 200 || !isLeague(data)) {
+        if (res.status !== 200) {
           throw new Error(data.error || 'Failed to fetch league data');
         }
+        
+        // Server handles migration automatically, so we can directly use the data
         setLeague(data);
       } catch (error) {
         console.error('Error fetching league:', error);

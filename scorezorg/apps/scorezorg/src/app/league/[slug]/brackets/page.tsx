@@ -49,15 +49,18 @@ export default function BracketsPage({ params }: { params: Promise<{ slug: strin
         ))}
         <button 
           className="px-5 text-black bg-blue-200 rounded hover:bg-blue-300 transition-colors text-sm font-semibold shadow px-2 mt-2" 
-          onClick={() => updateLeague((league) => ({
-            ...league, 
-            brackets: [...(league.brackets || []), {
-                id: String(Date.now()),
-                name: 'New Bracket',
-                players: [], // Start with empty players list
-                seedings: []
-            }] 
-          }))}
+          onClick={() => {
+            if (!updateLeague) return;
+            updateLeague((league) => ({
+              ...league, 
+              brackets: [...(league.brackets || []), {
+                  id: String(Date.now()),
+                  name: 'New Bracket',
+                  players: [], // Start with empty players list
+                  seedings: []
+              }] 
+            }));
+          }}
         >
           Add Bracket
         </button>

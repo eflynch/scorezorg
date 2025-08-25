@@ -31,19 +31,21 @@ export default function SeasonsPage({ params }: { params: Promise<{ slug: string
         ))}
         <button 
           className="px-5 text-black bg-blue-200 rounded hover:bg-blue-300 transition-colors text-sm font-semibold shadow px-2 mt-2" 
-          onClick={() => updateLeague((league) => ({
-            ...league, 
-            seasons: [...(league.seasons || []), {
-                id: String(Date.now()),
-                name: 'New Season',
-                startDate: new Date().toISOString().split('T')[0],
-                endDate: new Date().toISOString().split('T')[0],
-                matches: [],
-                players: league.players.map(p => p.id) // Initialize with all league players
-                ,
-                sport: "tennis"
-            }] 
-          }))}
+          onClick={() => {
+            if (!updateLeague) return;
+            updateLeague((league) => ({
+              ...league, 
+              seasons: [...(league.seasons || []), {
+                  id: String(Date.now()),
+                  name: 'New Season',
+                  startDate: new Date().toISOString().split('T')[0],
+                  endDate: new Date().toISOString().split('T')[0],
+                  matches: [],
+                  players: league.players.map(p => p.id) // Initialize with all league players
+                  ,
+              }] 
+            }));
+          }}
         >
           Add Season
         </button>

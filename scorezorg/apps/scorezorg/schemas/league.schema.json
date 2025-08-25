@@ -303,6 +303,9 @@
         },
         "updatedAt": {
             "type": "string"
+        },
+        "version": {
+            "type": "number"
         }
     },
     "required": [
@@ -313,7 +316,8 @@
         "seasons",
         "slug",
         "sport",
-        "updatedAt"
+        "updatedAt",
+        "version"
     ],
     "type": "object"
 }

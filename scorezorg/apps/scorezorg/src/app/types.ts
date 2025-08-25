@@ -57,6 +57,7 @@ export type League = {
     name: string;
     createdAt: string;
     updatedAt: string;
+    version: number;
     sport: Sport;
     players: Player[];
     seasons: Season[];

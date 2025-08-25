@@ -8,6 +8,7 @@ export const useBracketOperations = (bracketId: string) => {
   const bracket = league?.brackets.find(b => b.id === bracketId);
 
   const updateBracketName = (newName: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => update(league, {
       brackets: {
         [league.brackets.findIndex(b => b.id === bracketId)]: {
@@ -18,6 +19,7 @@ export const useBracketOperations = (bracketId: string) => {
   };
 
   const addPlayerToBracket = (playerId: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => update(league, {
       brackets: {
         [league.brackets.findIndex(b => b.id === bracketId)]: {
@@ -28,6 +30,7 @@ export const useBracketOperations = (bracketId: string) => {
   };
 
   const removePlayerFromBracket = (playerId: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => update(league, {
       brackets: {
         [league.brackets.findIndex(b => b.id === bracketId)]: {
@@ -102,6 +105,7 @@ export const useBracketOperations = (bracketId: string) => {
       return bracketMatch;
     };
 
+    if (!updateLeague) return;
     updateLeague((league) => update(league, {
       brackets: {
         [league.brackets.findIndex(b => b.id === bracketId)]: {
@@ -114,6 +118,8 @@ export const useBracketOperations = (bracketId: string) => {
   };
 
   const generateTournament = (bracketPlayers: Player[]) => {
+    if (!updateLeague) return;
+    
     if (bracketPlayers.length < 2) {
       alert('You need at least 2 players to generate a tournament');
       return;

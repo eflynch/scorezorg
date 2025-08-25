@@ -2,7 +2,7 @@
 import { use, useContext, useState } from "react";
 import { LeagueContext } from "@/app/contexts";
 import { TabNavigation } from "@/app/components";
-import { usePlayerStats } from "@/app/hooks/usePlayerStats";
+import { usePlayerStats } from "@/app/hooks";
 
 export default function PlayersPage({ params }: { params: Promise<{ slug: string }> }) {
   const { league, updateLeague} = useContext(LeagueContext);
@@ -136,13 +136,16 @@ export default function PlayersPage({ params }: { params: Promise<{ slug: string
         <div className="px-5 mt-6">
           <button 
             className="px-4 py-2 text-black bg-blue-200 rounded hover:bg-blue-300 transition-colors text-sm font-semibold shadow" 
-            onClick={() => updateLeague((league) => ({
-              ...league, 
-              players: [...league.players, { 
-                id: String(Date.now()), 
-                name: 'New Player' 
-              }] 
-            }))}
+            onClick={() => {
+              if (!updateLeague) return;
+              updateLeague((league) => ({
+                ...league, 
+                players: [...league.players, { 
+                  id: String(Date.now()), 
+                  name: 'New Player' 
+                }] 
+              }));
+            }}
           >
             Add Player
           </button>

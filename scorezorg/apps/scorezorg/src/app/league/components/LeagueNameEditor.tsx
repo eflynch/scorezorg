@@ -25,6 +25,7 @@ export const LeagueNameEditor = ({
     <EditBox
       value={league.name}
       onSave={(name) => {
+        if (!updateLeague) return;
         updateLeague((league:League) => ({ ...league, name }));
       }}
       className={className}

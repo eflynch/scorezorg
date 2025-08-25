@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { query } from '../../../../lib/db';
 import { isLeague } from '@/app/validators';
+import { loadLeagueWithMigration, needsMigration } from '@/app/utils/migrations';
 
 const getLeagueData = async (slug: string) => {
     try {
@@ -30,9 +31,9 @@ export async function GET(
     console.log('League slug:', slug);
 
     // now I want to get this data from the database
-    const leagueData = await getLeagueData(slug);
+    const rawLeagueData = await getLeagueData(slug);
 
-    if (!leagueData) {
+    if (!rawLeagueData) {
       return new NextResponse(
         JSON.stringify({ error: 'League not found' }), 
         {
@@ -40,6 +41,25 @@ export async function GET(
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    }
+
+    // Handle migration on server-side
+    let leagueData = rawLeagueData;
+    if (needsMigration(rawLeagueData)) {
+      console.log('🔄 Server: League data needs migration, migrating...');
+      leagueData = loadLeagueWithMigration(rawLeagueData);
+      
+      // Save migrated data back to database
+      try {
+        await query(
+          'UPDATE leagues SET content = $1 WHERE slug = $2',
+          [leagueData, slug]
+        );
+        console.log('✅ Server: Migrated league data saved to database');
+      } catch (updateError) {
+        console.error('⚠️ Server: Failed to save migrated data:', updateError);
+        // Continue with migrated data even if save fails
+      }
     }
 
     return new NextResponse(
@@ -110,7 +130,14 @@ export async function PUT(
   const { slug } = await params;
   const { content } = await request.json();
 
-  if (!isLeague(content)) {
+  // Handle migration before validation
+  let leagueData = content;
+  if (needsMigration(content)) {
+    console.log('🔄 Server: Incoming league data needs migration, migrating...');
+    leagueData = loadLeagueWithMigration(content);
+  }
+
+  if (!isLeague(leagueData)) {
     return new NextResponse(
       JSON.stringify({ error: 'Invalid league data' }), 
       {
@@ -126,7 +153,7 @@ export async function PUT(
 
     const result = await query(
         'UPDATE leagues SET content = $1 WHERE slug = $2 RETURNING *',
-        [content, slug]
+        [leagueData, slug]
     );
 
     if (result.rows.length === 0) {

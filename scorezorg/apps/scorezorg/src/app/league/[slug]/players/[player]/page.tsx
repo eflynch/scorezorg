@@ -3,7 +3,7 @@ import { use, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { LeagueContext } from "@/app/contexts";
 import { EditBox } from "@/app/components";
-import { usePlayerStats } from "@/app/hooks/usePlayerStats";
+import { usePlayerStats } from "@/app/hooks";
 
 export default function PlayerPage({ params }: { params: Promise<{ slug: string; player: string }> }) {
   const { league, updateLeague } = useContext(LeagueContext);
@@ -43,6 +43,7 @@ export default function PlayerPage({ params }: { params: Promise<{ slug: string;
   }
 
   const updatePlayerName = (newName: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       players: league.players.map(p => 

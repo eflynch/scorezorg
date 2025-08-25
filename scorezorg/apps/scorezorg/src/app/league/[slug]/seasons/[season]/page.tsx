@@ -14,14 +14,6 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
 
   const season = league?.seasons.find(s => s.id === seasonId);
   
-  // Ensure the league has a sport field (for backwards compatibility)
-  if (league && league.sport === undefined) {
-    updateLeague((league) => ({
-      ...league,
-      sport: 'simple' as const
-    }));
-  }
-  
   // Get available players not in this season
   const availablePlayers = useMemo(() => {
     if (!league || !season) return [];
@@ -49,6 +41,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   }
 
   const updateSeasonName = (newName: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -58,6 +51,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   };
 
   const updateStartDate = (newDate: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -67,6 +61,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   };
 
   const updateEndDate = (newDate: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -76,6 +71,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   };
 
   const addPlayerToSeason = (playerId: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -85,6 +81,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   };
 
   const removePlayerFromSeason = (playerId: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -108,6 +105,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
       winner: "draw"
     };
 
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -117,6 +115,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   };
 
   const updateMatch = (matchId: string, updates: Partial<Match>) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -131,6 +130,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
   };
 
   const removeMatch = (matchId: string) => {
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -228,6 +228,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
     // Shuffle the final matches for better distribution
     const shuffledMatches = newMatches.sort(() => Math.random() - 0.5);
 
+    if (!updateLeague) return;
     updateLeague((league) => ({
       ...league,
       seasons: league.seasons.map(s => 
@@ -419,6 +420,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
                           score={match.scores}
                           onScoreChange={(newScore) => updateMatch(match.id, { scores: newScore })}
                           sport={league?.sport || 'simple'}
+                          players={match.players.length === 2 ? [match.players[0], match.players[1]] : undefined}
                           className="mt-2"
                         />
                       </div>

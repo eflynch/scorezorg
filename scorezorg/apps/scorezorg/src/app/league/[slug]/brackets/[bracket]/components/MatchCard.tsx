@@ -88,6 +88,7 @@ export const MatchCard = ({
             score={currentScore} 
             onScoreChange={handleScoreChange}
             sport={sport}
+            players={player1 && player2 ? [player1, player2] : undefined}
           />
         </div>
       )}
@@ -100,6 +101,7 @@ export const MatchCard = ({
             score={currentScore} 
             onScoreChange={handleScoreChange}
             sport={sport}
+            players={[player1, player2]}
           />
         </div>
       )}

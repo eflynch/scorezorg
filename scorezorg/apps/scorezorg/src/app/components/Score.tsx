@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Score as ScoreType, TennisScore, Sport } from '@/app/types';
+import { Score as ScoreType, TennisScore, Sport, Player } from '@/app/types';
 
 interface ScoreProps {
   score?: ScoreType;
   onScoreChange: (score: ScoreType | undefined) => void;
   sport?: Sport;
+  players?: [Player, Player];
   className?: string;
 }
 
-export const Score = ({ score, onScoreChange, sport = 'simple', className = '' }: ScoreProps) => {
+export const Score = ({ score, onScoreChange, sport = 'simple', players, className = '' }: ScoreProps) => {
   const [scoreText, setScoreText] = useState(() => {
     if (!score) return '';
     
@@ -203,7 +204,7 @@ export const Score = ({ score, onScoreChange, sport = 'simple', className = '' }
           </div>
           
           <div className="grid grid-cols-3 gap-2 items-center">
-            <span className="text-sm text-gray-600">Player 1:</span>
+            <span className="text-sm text-gray-600">{players?.[0]?.name || 'Player 1'}:</span>
             <input
               type="number"
               min="0"
@@ -214,7 +215,7 @@ export const Score = ({ score, onScoreChange, sport = 'simple', className = '' }
             />
             <span className="text-xs text-gray-500">games</span>
             
-            <span className="text-sm text-gray-600">Player 2:</span>
+            <span className="text-sm text-gray-600">{players?.[1]?.name || 'Player 2'}:</span>
             <input
               type="number"
               min="0"
@@ -230,7 +231,7 @@ export const Score = ({ score, onScoreChange, sport = 'simple', className = '' }
             <div className="mt-3 pt-3 border-t">
               <div className="text-xs text-gray-600 mb-2">Tiebreak:</div>
               <div className="grid grid-cols-3 gap-2 items-center">
-                <span className="text-sm text-gray-600">Player 1:</span>
+                <span className="text-sm text-gray-600">{players?.[0]?.name || 'Player 1'}:</span>
                 <input
                   type="number"
                   min="0"
@@ -240,7 +241,7 @@ export const Score = ({ score, onScoreChange, sport = 'simple', className = '' }
                 />
                 <span className="text-xs text-gray-500">points</span>
                 
-                <span className="text-sm text-gray-600">Player 2:</span>
+                <span className="text-sm text-gray-600">{players?.[1]?.name || 'Player 2'}:</span>
                 <input
                   type="number"
                   min="0"

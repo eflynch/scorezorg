@@ -2,6 +2,7 @@ import { League } from "@/app/types";
 import { query } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { generate } from "random-words";
+import { CURRENT_LEAGUE_VERSION } from "@/app/utils/migrations";
 
 const generateSlug = () => {
     // join some random words from the dictionary. use a library
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
             slug,
             name,
             sport,
+            version: CURRENT_LEAGUE_VERSION,
             players: [],
             seasons: [],
             brackets: [],
