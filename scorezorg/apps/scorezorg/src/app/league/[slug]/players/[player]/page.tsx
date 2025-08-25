@@ -1,51 +1,19 @@
 'use client';
 import { use, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { LeagueContext } from "../../league-context";
-import { EditBox } from "../../edit-box";
-import { usePlayerSeasonStats } from "@/app/usePlayerStats";
-import { League } from "@/app/types";
-
-// Helper function to calculate season stats for a player
-const getPlayerSeasonStats = (league: League, playerId: string, seasonId: string) => {
-  const stats = {
-    matchesPlayed: 0,
-    wins: 0,
-    losses: 0,
-    draws: 0,
-  };
-
-  const season = league.seasons.find(s => s.id === seasonId);
-  if (!season) return stats;
-
-  season.matches.forEach(match => {
-    const playerIndex = match.players.findIndex(p => p.id === playerId);
-    if (playerIndex !== -1) {
-      stats.matchesPlayed += 1;
-      if (match.winner === undefined) {
-        // Match not yet played, don't count win/loss/draw
-      } else if (match.winner === "draw") {
-        stats.draws += 1;
-      } else if (match.winner === playerIndex) {
-        stats.wins += 1;
-      } else {
-        stats.losses += 1;
-      }
-    }
-  });
-
-  return stats;
-};
+import { LeagueContext } from "@/app/contexts";
+import { EditBox } from "@/app/components";
+import { usePlayerStats } from "@/app/hooks/usePlayerStats";
 
 export default function PlayerPage({ params }: { params: Promise<{ slug: string; player: string }> }) {
   const { league, updateLeague } = useContext(LeagueContext);
   const router = useRouter();
   const { slug: leagueSlug, player: playerSlug } = use(params);
+  const { getPlayerRanking } = usePlayerStats(league);
 
   const player = league?.players.find(p => p.id === playerSlug);
-
-  // Get overall stats using the existing function
-  const overallStats = usePlayerSeasonStats(league || { players: [], seasons: [], brackets: [], slug: '', name: '', createdAt: '', updatedAt: '' }, playerSlug);
+  const playerRanking = getPlayerRanking(playerSlug);
+  const playerStats = playerRanking?.stats;
 
   // Find seasons and brackets the player is involved in
   const playerSeasons = useMemo(() => {
@@ -108,24 +76,101 @@ export default function PlayerPage({ params }: { params: Promise<{ slug: string;
       {/* Stats Section */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-4">Statistics</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg border">
-            <div className="text-2xl font-bold text-blue-600">{overallStats.matchesPlayed}</div>
-            <div className="text-sm text-gray-600">Total Matches</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg border">
-            <div className="text-2xl font-bold text-green-600">{overallStats.wins}</div>
-            <div className="text-sm text-gray-600">Wins</div>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg border">
-            <div className="text-2xl font-bold text-red-600">{overallStats.losses}</div>
-            <div className="text-sm text-gray-600">Losses</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg border">
-            <div className="text-2xl font-bold text-yellow-600">{overallStats.draws}</div>
-            <div className="text-sm text-gray-600">Draws</div>
-          </div>
-        </div>
+        
+        {playerStats ? (
+          <>
+            {/* Overall Performance */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-blue-600">{playerStats.totalMatches}</div>
+                <div className="text-sm text-gray-600">Total Matches</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-green-600">{playerStats.wins}</div>
+                <div className="text-sm text-gray-600">Wins</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-red-600">{playerStats.losses}</div>
+                <div className="text-sm text-gray-600">Losses</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-yellow-600">{playerStats.draws}</div>
+                <div className="text-sm text-gray-600">Draws</div>
+              </div>
+            </div>
+
+            {/* Ranking and Performance Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-purple-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-purple-600">#{playerRanking?.rank || 'N/A'}</div>
+                <div className="text-sm text-gray-600">League Ranking</div>
+                {playerRanking?.rankChange && (
+                  <div className={`text-xs mt-1 ${playerRanking.rankChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {playerRanking.rankChange > 0 ? '↗' : '↘'} {Math.abs(playerRanking.rankChange)} from last ranking
+                  </div>
+                )}
+              </div>
+              <div className="bg-indigo-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-indigo-600">{(playerStats.winRate * 100).toFixed(1)}%</div>
+                <div className="text-sm text-gray-600">Win Rate</div>
+              </div>
+              <div className="bg-cyan-50 p-4 rounded-lg border">
+                <div className="text-2xl font-bold text-cyan-600">{playerStats.rankingScore.toFixed(1)}</div>
+                <div className="text-sm text-gray-600">Ranking Score</div>
+              </div>
+            </div>
+
+            {/* Advanced Statistics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="text-xl font-bold text-gray-700">{playerStats.averagePointsScored.toFixed(1)}</div>
+                <div className="text-sm text-gray-600">Avg Points Scored</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="text-xl font-bold text-gray-700">{playerStats.pointDifferential > 0 ? '+' : ''}{playerStats.pointDifferential.toFixed(1)}</div>
+                <div className="text-sm text-gray-600">Point Differential</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="text-xl font-bold text-gray-700">
+                  {playerStats.currentStreak > 0 && 'W'}
+                  {playerStats.currentStreak < 0 && 'L'}
+                  {Math.abs(playerStats.currentStreak)}
+                </div>
+                <div className="text-sm text-gray-600">Current Streak</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="text-xl font-bold text-gray-700">W{playerStats.winStreak}</div>
+                <div className="text-sm text-gray-600">Best Win Streak</div>
+              </div>
+            </div>
+
+            {/* Activity and Tennis Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-orange-50 p-4 rounded-lg border">
+                <div className="text-xl font-bold text-orange-600">{playerStats.seasonsParticipated}</div>
+                <div className="text-sm text-gray-600">Seasons</div>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg border">
+                <div className="text-xl font-bold text-orange-600">{playerStats.tournamentsParticipated}</div>
+                <div className="text-sm text-gray-600">Tournaments</div>
+              </div>
+              {(playerStats.setsWon > 0 || playerStats.setsLost > 0) && (
+                <>
+                  <div className="bg-teal-50 p-4 rounded-lg border">
+                    <div className="text-xl font-bold text-teal-600">{playerStats.setsWon}-{playerStats.setsLost}</div>
+                    <div className="text-sm text-gray-600">Sets Won-Lost</div>
+                  </div>
+                  <div className="bg-teal-50 p-4 rounded-lg border">
+                    <div className="text-xl font-bold text-teal-600">{playerStats.gamesWon.toFixed(0)}-{playerStats.gamesLost.toFixed(0)}</div>
+                    <div className="text-sm text-gray-600">Games Won-Lost</div>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="text-gray-500 italic">No match statistics available yet</div>
+        )}
       </div>
 
       {/* Seasons Section */}
@@ -134,7 +179,26 @@ export default function PlayerPage({ params }: { params: Promise<{ slug: string;
         {playerSeasons.length > 0 ? (
           <div className="space-y-2">
             {playerSeasons.map(season => {
-              const seasonStats = league && player ? getPlayerSeasonStats(league, player.id, season.id) : { matchesPlayed: 0, wins: 0, losses: 0, draws: 0 };
+              // Calculate season-specific stats from the season's matches
+              let seasonWins = 0;
+              let seasonLosses = 0;
+              let seasonDraws = 0;
+              let seasonMatches = 0;
+              
+              season.matches.forEach(match => {
+                const playerIndex = match.players.findIndex(p => p.id === player.id);
+                if (playerIndex !== -1) {
+                  seasonMatches++;
+                  if (match.winner === playerIndex) {
+                    seasonWins++;
+                  } else if (match.winner === "draw") {
+                    seasonDraws++;
+                  } else if (match.winner !== undefined) {
+                    seasonLosses++;
+                  }
+                }
+              });
+              
               return (
                 <div key={season.id} className="bg-gray-50 p-4 rounded-lg border">
                   <div className="flex justify-between items-center">
@@ -144,7 +208,7 @@ export default function PlayerPage({ params }: { params: Promise<{ slug: string;
                         {season.startDate} to {season.endDate} • {season.matches.length} total matches
                       </p>
                       <p className="text-xs text-blue-600 mt-1">
-                        Your stats: {seasonStats.wins}W-{seasonStats.losses}L-{seasonStats.draws}D ({seasonStats.matchesPlayed} played)
+                        Your stats: {seasonWins}W-{seasonLosses}L-{seasonDraws}D ({seasonMatches} played)
                       </p>
                     </div>
                     <button
@@ -174,7 +238,7 @@ export default function PlayerPage({ params }: { params: Promise<{ slug: string;
                   <div>
                     <h3 className="font-semibold">{bracket.name}</h3>
                     <p className="text-sm text-gray-600">
-                      {bracket.rounds.length} rounds • {bracket.players.length} total players
+                      {bracket.players.length} total players
                     </p>
                   </div>
                   <button

@@ -2,7 +2,7 @@
 import { use, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLeagueDb } from "@/app/use-league-db";
-import { LeagueContext } from "./league-context";
+import { LeagueContext } from "@/app/contexts";
 
 export default function LeagueRoot({ params }: { params: Promise<{ slug: string }> }) {
   const { league } = useContext(LeagueContext);

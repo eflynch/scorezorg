@@ -31,10 +31,15 @@ export async function POST(request: NextRequest) {
     // add a new league to the database
     const slug = generateSlug();
     console.log('Adding league:', slug);
+    
     try {
+        const body = await request.json();
+        const { name = "New League", sport = 'simple' } = body;
+        
         const newLeague = await createLeague(slug, {
             slug,
-            name: "New League",
+            name,
+            sport,
             players: [],
             seasons: [],
             brackets: [],

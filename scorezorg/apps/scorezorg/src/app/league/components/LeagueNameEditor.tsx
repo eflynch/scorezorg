@@ -1,9 +1,9 @@
 'use client';
 
 import { League } from '@/app/types';
-import { EditBox } from './edit-box';
+import { EditBox } from '@/app/components';
 import { useContext } from 'react';
-import { LeagueContext } from './league-context';
+import { LeagueContext } from '@/app/contexts';
 
 interface LeagueNameEditorProps {
   className?: string;

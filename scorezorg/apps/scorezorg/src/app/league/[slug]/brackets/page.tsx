@@ -1,8 +1,8 @@
 'use client';
 import { use, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { LeagueContext } from "../league-context";
-import TabNavigation from "../tab-navigation";
+import { LeagueContext } from "@/app/contexts";
+import { TabNavigation } from "@/app/components";
 import { BracketMatch } from "@/app/types";
 
 // Helper function to count rounds in a tournament tree

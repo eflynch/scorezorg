@@ -1,11 +1,14 @@
-import { BracketMatch, Player } from '@/app/types';
+import { BracketMatch, Player, Score as ScoreType, Sport } from '@/app/types';
+import { Score } from '@/app/components';
+import { useState } from 'react';
 
 interface MatchCardProps {
   match: BracketMatch;
   roundName: string;
   matchIndex: number;
   players: Player[];
-  onUpdateMatch: (matchId: string, winnerId: string | null, score?: string) => void;
+  onUpdateMatch: (matchId: string, winnerId: string | null, score?: ScoreType) => void;
+  sport?: Sport;
 }
 
 export const MatchCard = ({ 
@@ -13,7 +16,8 @@ export const MatchCard = ({
   roundName, 
   matchIndex, 
   players, 
-  onUpdateMatch 
+  onUpdateMatch,
+  sport = 'simple'
 }: MatchCardProps) => {
   const player1 = match.match.players[0];
   const player2 = match.match.players[1];
@@ -23,11 +27,21 @@ export const MatchCard = ({
     ? match.match.players[match.match.winner]?.id 
     : null;
   
-  const handleScoreSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const [currentScore, setCurrentScore] = useState<ScoreType | undefined>(match.match.scores);
+  
+  const handleWinnerChange = (selectedWinnerId: string) => {
+    onUpdateMatch(match.match.id, selectedWinnerId || null, currentScore);
+  };
+  
+  const handleScoreChange = (newScore: ScoreType | undefined) => {
+    setCurrentScore(newScore);
+    onUpdateMatch(match.match.id, winnerId, newScore);
+  };
+
+  const handleWinnerSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const selectedWinnerId = formData.get('winner') as string;
-    const score = formData.get('score') as string;
     
     // If there was already a winner and user is changing it, show confirmation
     if (winnerId && selectedWinnerId !== winnerId && selectedWinnerId !== "") {
@@ -41,12 +55,7 @@ export const MatchCard = ({
       }
     }
     
-    // Allow clearing the winner by selecting empty value
-    if (selectedWinnerId === "") {
-      onUpdateMatch(match.match.id, null, score || undefined);
-    } else if (selectedWinnerId && (selectedWinnerId === player1?.id || selectedWinnerId === player2?.id)) {
-      onUpdateMatch(match.match.id, selectedWinnerId, score || undefined);
-    }
+    handleWinnerChange(selectedWinnerId);
   };
 
   return (
@@ -74,8 +83,24 @@ export const MatchCard = ({
       </div>
 
       {match.match.scores && (
-        <div className="mt-2 text-sm text-gray-600">
-          Score: {JSON.stringify(match.match.scores)}
+        <div className="mt-2">
+          <Score 
+            score={currentScore} 
+            onScoreChange={handleScoreChange}
+            sport={sport}
+          />
+        </div>
+      )}
+      
+      {!match.match.scores && player1 && player2 && 
+       player1.id !== 'tbd' && player2.id !== 'tbd' && 
+       !player1.id.startsWith('bye-') && !player2.id.startsWith('bye-') && (
+        <div className="mt-2">
+          <Score 
+            score={currentScore} 
+            onScoreChange={handleScoreChange}
+            sport={sport}
+          />
         </div>
       )}
 
@@ -89,7 +114,7 @@ export const MatchCard = ({
       {player1 && player2 && 
        player1.id !== 'tbd' && player2.id !== 'tbd' && 
        !player1.id.startsWith('bye-') && !player2.id.startsWith('bye-') && (
-        <form onSubmit={handleScoreSubmit} className="mt-4 space-y-2">
+        <form onSubmit={handleWinnerSubmit} className="mt-4 space-y-2">
           <div>
             <label className="block text-sm font-medium text-gray-700">Winner:</label>
             <select 
@@ -103,21 +128,11 @@ export const MatchCard = ({
             </select>
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Score (optional):</label>
-            <input 
-              type="text" 
-              name="score"
-              placeholder="e.g., 6-4, 6-3"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            />
-          </div>
-          
           <button 
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
           >
-            {winnerId ? 'Update Match' : 'Set Winner'}
+            {winnerId ? 'Update Winner' : 'Set Winner'}
           </button>
         </form>
       )}

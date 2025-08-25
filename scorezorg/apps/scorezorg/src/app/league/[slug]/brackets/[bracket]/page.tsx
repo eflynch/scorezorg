@@ -1,9 +1,9 @@
 'use client';
 import { use, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { LeagueContext } from "../../league-context";
-import { EditBox } from "../../edit-box";
-import { BracketMatch, Player } from "@/app/types";
+import { LeagueContext } from "@/app/contexts";
+import { EditBox } from "@/app/components";
+import { BracketMatch, Player, Score } from "@/app/types";
 import { useBracketOperations } from "./hooks/useBracketOperations";
 import { PlayerList, TournamentDisplay } from "./components";
 
@@ -48,7 +48,7 @@ export default function BracketPage({ params }: { params: Promise<{ slug: string
     );
   }
 
-  const handleUpdateMatch = (matchId: string, winnerId: string | null, score?: string) => {
+  const handleUpdateMatch = (matchId: string, winnerId: string | null, score?: Score) => {
     // Convert winnerId to winner index for the existing logic
     const targetMatch = findMatchById(bracket.finalMatch, matchId);
     if (!targetMatch) return;
@@ -63,7 +63,8 @@ export default function BracketPage({ params }: { params: Promise<{ slug: string
       }
     }
 
-    updateMatch(matchId, winner);
+    // Update both winner and score
+    updateMatch(matchId, winner, score);
   };
 
   // Helper function to find a match by ID in the tournament tree
@@ -143,6 +144,7 @@ export default function BracketPage({ params }: { params: Promise<{ slug: string
             finalMatch={bracket.finalMatch}
             players={league?.players || []}
             onUpdateMatch={handleUpdateMatch}
+            sport={league?.sport || 'simple'}
           />
         ) : (
           <div className="text-gray-500 italic">No tournament generated yet</div>

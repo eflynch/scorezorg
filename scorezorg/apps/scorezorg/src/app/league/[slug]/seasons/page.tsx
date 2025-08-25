@@ -1,8 +1,8 @@
 'use client';
 import { use, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { LeagueContext } from "../league-context";
-import TabNavigation from "../tab-navigation";
+import { LeagueContext } from "@/app/contexts";
+import { TabNavigation } from "@/app/components";
 
 export default function SeasonsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { league, updateLeague } = useContext(LeagueContext);

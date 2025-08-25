@@ -1,7 +1,7 @@
 import update from 'immutability-helper';
 import { useContext } from 'react';
-import { LeagueContext } from '../../../league-context';
-import { BracketMatch, Player } from '@/app/types';
+import { LeagueContext } from '@/app/contexts';
+import { BracketMatch, Player, Score } from '@/app/types';
 
 export const useBracketOperations = (bracketId: string) => {
   const { league, updateLeague } = useContext(LeagueContext);
@@ -37,15 +37,18 @@ export const useBracketOperations = (bracketId: string) => {
     }));
   };
 
-  const updateMatch = (matchId: string, winner: number | "draw" | undefined) => {
+  const updateMatch = (matchId: string, winner: number | "draw" | undefined, score?: Score) => {
     const updateBracketMatch = (bracketMatch: BracketMatch): BracketMatch => {
       if (bracketMatch.match.id === matchId) {
-        // Update the current match winner
-        return update(bracketMatch, {
+        // Update the current match winner and score
+        const updates = {
           match: {
-            winner: { $set: winner }
+            winner: { $set: winner },
+            ...(score !== undefined && { scores: { $set: score } })
           }
-        });
+        };
+        
+        return update(bracketMatch, updates);
       }
       
       if (bracketMatch.children) {

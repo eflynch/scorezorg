@@ -1,6 +1,6 @@
 
-import { LeagueNameEditor } from "./league-name-editor";
-import { LeagueProvider } from "./league-context";
+import { LeagueNameEditor } from "@/app/league/components";
+import { LeagueProvider } from "@/app/contexts";
 
 export default async function LeagueLayout({
   children,

@@ -1,8 +1,10 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useLeagueDb } from "../use-league-db";
 
 export default function League() {
+  const router = useRouter();
   const {leagues} = useLeagueDb();
   return (
     <div className="flex flex-col items-center justify-center bg-gray-100 pb-10">
@@ -25,20 +27,8 @@ export default function League() {
 
       <button
         className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold shadow"
-        onClick={async () => {
-          const res = await fetch('/api/league', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-          });
-          if (!res.ok) {
-        throw new Error('Failed to create league');
-          }
-          const newLeague = await res.json();
-          console.log('Created league:', newLeague);
-          // Redirect to the new league page
-          window.location.href = `/league/${newLeague.slug}`;
+        onClick={() => {
+          router.push('/league/new');
         }}
       >
         Create League

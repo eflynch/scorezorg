@@ -5,7 +5,7 @@ interface TabNavigationProps {
   slug: string;
 }
 
-export default function TabNavigation({ slug }: TabNavigationProps) {
+export function TabNavigation({ slug }: TabNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
 

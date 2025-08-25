@@ -1,17 +1,19 @@
-import { BracketMatch, Player } from '@/app/types';
+import { BracketMatch, Player, Score, Sport } from '@/app/types';
 import { getAllMatchesByRound, getRoundName } from '../utils/tournamentUtils';
 import { MatchCard } from './MatchCard';
 
 interface TournamentDisplayProps {
   finalMatch: BracketMatch;
   players: Player[];
-  onUpdateMatch: (matchId: string, winnerId: string | null, score?: string) => void;
+  onUpdateMatch: (matchId: string, winnerId: string | null, score?: Score) => void;
+  sport?: Sport;
 }
 
 export const TournamentDisplay = ({ 
   finalMatch, 
   players, 
-  onUpdateMatch 
+  onUpdateMatch,
+  sport = 'simple'
 }: TournamentDisplayProps) => {
   const matchesByRound = getAllMatchesByRound(finalMatch);
   const rounds = Object.keys(matchesByRound)
@@ -39,6 +41,7 @@ export const TournamentDisplay = ({
                     matchIndex={index}
                     players={players}
                     onUpdateMatch={onUpdateMatch}
+                    sport={sport}
                   />
                 ))}
               </div>

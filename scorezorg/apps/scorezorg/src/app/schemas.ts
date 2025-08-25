@@ -4,6 +4,86 @@
 export const leagueSchema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "BracketMatch": {
+      "properties": {
+        "children": {
+          "items": [
+            {
+              "$ref": "#/definitions/BracketMatch"
+            },
+            {
+              "$ref": "#/definitions/BracketMatch"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "match": {
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "players": {
+              "items": {
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "scores": {
+              "$ref": "#/definitions/Score"
+            },
+            "winner": {
+              "anyOf": [
+                {
+                  "const": "draw",
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "players"
+          ],
+          "type": "object"
+        },
+        "position": {
+          "type": "number"
+        },
+        "round": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "match",
+        "position",
+        "round"
+      ],
+      "type": "object"
+    },
     "Score": {
       "anyOf": [
         {
@@ -52,12 +132,23 @@ export const leagueSchema = {
           "type": "object"
         }
       ]
+    },
+    "Sport": {
+      "enum": [
+        "other",
+        "simple",
+        "tennis"
+      ],
+      "type": "string"
     }
   },
   "properties": {
     "brackets": {
       "items": {
         "properties": {
+          "finalMatch": {
+            "$ref": "#/definitions/BracketMatch"
+          },
           "id": {
             "type": "string"
           },
@@ -67,75 +158,6 @@ export const leagueSchema = {
           "players": {
             "items": {
               "type": "string"
-            },
-            "type": "array"
-          },
-          "rounds": {
-            "items": {
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "matches": {
-                  "items": {
-                    "properties": {
-                      "date": {
-                        "type": "string"
-                      },
-                      "id": {
-                        "type": "string"
-                      },
-                      "players": {
-                        "items": {
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "name": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "name"
-                          ],
-                          "type": "object"
-                        },
-                        "type": "array"
-                      },
-                      "scores": {
-                        "$ref": "#/definitions/Score"
-                      },
-                      "winner": {
-                        "anyOf": [
-                          {
-                            "const": "draw",
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "players"
-                    ],
-                    "type": "object"
-                  },
-                  "type": "array"
-                },
-                "name": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "id",
-                "matches",
-                "name"
-              ],
-              "type": "object"
             },
             "type": "array"
           },
@@ -162,7 +184,6 @@ export const leagueSchema = {
           "id",
           "name",
           "players",
-          "rounds",
           "seedings"
         ],
         "type": "object"
@@ -261,15 +282,6 @@ export const leagueSchema = {
             },
             "type": "array"
           },
-          "sport": {
-            "enum": [
-              "other",
-              "ping-pong",
-              "simple",
-              "tennis"
-            ],
-            "type": "string"
-          },
           "startDate": {
             "type": "string"
           }
@@ -289,6 +301,9 @@ export const leagueSchema = {
     "slug": {
       "type": "string"
     },
+    "sport": {
+      "$ref": "#/definitions/Sport"
+    },
     "updatedAt": {
       "type": "string"
     }
@@ -300,6 +315,7 @@ export const leagueSchema = {
     "players",
     "seasons",
     "slug",
+    "sport",
     "updatedAt"
   ],
   "type": "object"

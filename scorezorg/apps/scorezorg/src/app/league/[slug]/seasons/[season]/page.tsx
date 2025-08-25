@@ -1,9 +1,10 @@
 'use client';
 import { use, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LeagueContext } from "../../league-context";
-import { EditBox } from "../../edit-box";
+import { LeagueContext } from "@/app/contexts";
+import { EditBox } from "@/app/components";
 import { Match, Score, TennisScore, SimpleScore } from "@/app/types";
+import { Score as ScoreComponent } from "@/app/components";
 
 export default function SeasonPage({ params }: { params: Promise<{ slug: string; season: string }> }) {
   const { league, updateLeague } = useContext(LeagueContext);
@@ -13,13 +14,11 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
 
   const season = league?.seasons.find(s => s.id === seasonId);
   
-  // Ensure the season has a sport field (for backwards compatibility)
-  if (season && season.sport === undefined) {
+  // Ensure the league has a sport field (for backwards compatibility)
+  if (league && league.sport === undefined) {
     updateLeague((league) => ({
       ...league,
-      seasons: league.seasons.map(s => 
-        s.id === season.id ? { ...s, sport: 'simple' as const } : s
-      )
+      sport: 'simple' as const
     }));
   }
   
@@ -76,15 +75,6 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
     }));
   };
 
-  const updateSport = (newSport: 'tennis' | 'ping-pong' | 'simple' | 'other') => {
-    updateLeague((league) => ({
-      ...league,
-      seasons: league.seasons.map(s => 
-        s.id === season.id ? { ...s, sport: newSport } : s
-      )
-    }));
-  };
-
   const addPlayerToSeason = (playerId: string) => {
     updateLeague((league) => ({
       ...league,
@@ -109,7 +99,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
       return;
     }
 
-    const sport = season.sport || 'simple';
+    const sport = league?.sport || 'simple';
     const newMatch: Match = {
       id: String(Date.now()),
       date: new Date().toISOString().split('T')[0],
@@ -175,20 +165,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
     }
   };
 
-  const getScoreDisplay = (scores: Score | undefined, playerIndex: number): string => {
-    if (!scores) return '0';
-    
-    if ('points' in scores) {
-      return String(scores.points[playerIndex] || 0);
-    } else if ('sets' in scores) {
-      // For tennis, show current set games
-      const currentSet = scores.sets[scores.sets.length - 1];
-      return String(currentSet?.games[playerIndex] || 0);
-    }
-    return '0';
-  };
-
-  const getFullScoreDisplay = (match: Match): string => {
+  const getScoreDisplay = (match: Match): string => {
     if (!match.scores) return "No score";
     
     if ('points' in match.scores) {
@@ -199,30 +176,6 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
       ).join(', ');
     }
     return "No score";
-  };
-
-  const updateScore = (matchId: string, playerIndex: number, value: string) => {
-    const match = season.matches.find(m => m.id === matchId);
-    if (!match) return;
-
-    const sport = season.sport || 'simple';
-    let newScores = match.scores || createDefaultScore(sport);
-
-    if ('points' in newScores) {
-      const updatedPoints = [...newScores.points];
-      updatedPoints[playerIndex] = parseInt(value) || 0;
-      newScores = { points: updatedPoints };
-    } else if ('sets' in newScores) {
-      const updatedSets = [...newScores.sets];
-      const currentSetIndex = updatedSets.length - 1;
-      const currentSet = { ...updatedSets[currentSetIndex] };
-      currentSet.games = [...currentSet.games];
-      currentSet.games[playerIndex] = parseInt(value) || 0;
-      updatedSets[currentSetIndex] = currentSet;
-      newScores = { sets: updatedSets };
-    }
-
-    updateMatch(matchId, { scores: newScores });
   };
 
   const generateMatchSchedule = () => {
@@ -321,16 +274,9 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
             className="border rounded px-3 py-2"
           />
           <span className="text-lg text-gray-600">Sport:</span>
-          <select
-            value={season.sport || 'simple'}
-            onChange={(e) => updateSport(e.target.value as 'tennis' | 'ping-pong' | 'simple' | 'other')}
-            className="border rounded px-3 py-2"
-          >
-            <option value="simple">Simple Score</option>
-            <option value="tennis">Tennis</option>
-            <option value="ping-pong">Ping Pong</option>
-            <option value="other">Other</option>
-          </select>
+          <span className="px-3 py-2 bg-gray-100 rounded border text-gray-700 capitalize">
+            {league?.sport === 'simple' ? 'Simple Score' : league?.sport || 'Unknown'}
+          </span>
         </div>
       </div>
 
@@ -442,9 +388,10 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
                     />
                   </div>
 
-                  {/* Players and Scores */}
+                  {/* Players and Score */}
                   <div className="md:col-span-2">
                     <div className="space-y-2">
+                      {/* Player selectors */}
                       {match.players.map((player, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <select
@@ -463,61 +410,18 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
-                          
-                          {/* Score Input - varies by sport */}
-                          {season.sport === 'tennis' ? (
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="number"
-                                min="0"
-                                max="7"
-                                value={getScoreDisplay(match.scores, index)}
-                                onChange={(e) => updateScore(match.id, index, e.target.value)}
-                                className="w-12 border rounded px-1 py-1 text-center text-xs"
-                                placeholder="G"
-                                title="Games in current set"
-                              />
-                              <span className="text-xs text-gray-500">G</span>
-                            </div>
-                          ) : (
-                            <input
-                              type="number"
-                              min="0"
-                              value={getScoreDisplay(match.scores, index)}
-                              onChange={(e) => updateScore(match.id, index, e.target.value)}
-                              className="w-16 border rounded px-2 py-1 text-center"
-                            />
-                          )}
                         </div>
                       ))}
                       
-                      {/* Tennis Set Management */}
-                      {season.sport === 'tennis' && match.scores && 'sets' in match.scores && (
-                        <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-semibold">Sets:</span>
-                            <button
-                              onClick={() => {
-                                const tennisScore = match.scores as TennisScore;
-                                const newSets = [...tennisScore.sets, { games: [0, 0] }];
-                                updateMatch(match.id, { scores: { sets: newSets } });
-                              }}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              + Set
-                            </button>
-                          </div>
-                          {(match.scores as TennisScore).sets.map((set, setIndex) => (
-                            <div key={setIndex} className="flex items-center gap-2 mb-1">
-                              <span>Set {setIndex + 1}:</span>
-                              <span>{set.games[0]} - {set.games[1]}</span>
-                              {set.tiebreak && (
-                                <span className="text-gray-600">({set.tiebreak[0]}-{set.tiebreak[1]})</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {/* Score Component */}
+                      <div className="mt-2">
+                        <ScoreComponent
+                          score={match.scores}
+                          onScoreChange={(newScore) => updateMatch(match.id, { scores: newScore })}
+                          sport={league?.sport || 'simple'}
+                          className="mt-2"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -569,7 +473,7 @@ export default function SeasonPage({ params }: { params: Promise<{ slug: string;
                     <>
                       <strong>Result:</strong> {getPlayerName(match.players[0].id)} vs {getPlayerName(match.players[1].id)}
                       {match.scores && (
-                        <span> - {getFullScoreDisplay(match)}</span>
+                        <span> - {getScoreDisplay(match)}</span>
                       )}
                       <span className="ml-2 font-semibold">Winner: {getWinnerDisplay(match)}</span>
                     </>

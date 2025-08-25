@@ -1,4 +1,6 @@
 
+export type Sport = 'tennis' | 'simple' | 'other';
+
 export type Player = {
     id: string;
     name: string;
@@ -32,7 +34,6 @@ export type Season = {
     startDate: string;
     endDate: string;
     matches: Match[];
-    sport?: 'tennis' | 'ping-pong' | 'simple' | 'other';
 }
 
 export type BracketMatch = {
@@ -56,6 +57,7 @@ export type League = {
     name: string;
     createdAt: string;
     updatedAt: string;
+    sport: Sport;
     players: Player[];
     seasons: Season[];
     brackets: Bracket[];
