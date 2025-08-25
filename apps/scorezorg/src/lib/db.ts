@@ -14,8 +14,7 @@ const pool = new Pool({
   max: process.env.NODE_ENV === 'production' ? 10 : 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-  // SSL configuration for production
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // SSL is handled by the DATABASE_URL connection string
 });
 
 // Helper function to execute queries
