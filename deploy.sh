@@ -155,17 +155,17 @@ if docker compose ps >/dev/null 2>&1 && docker compose ps | grep -q "Up"; then
     docker compose down
 fi
 
-# Build and start services
-print_status "🏗️ Building Docker images..."
+# Build and start services in one step
+print_status "🏗️ Building and starting services..."
 print_status "This may take several minutes for the first build..."
 
-# First, build the images (this will wait for completion)
-timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml build --progress=plain 2>&1 | tee /tmp/docker-build.log || {
-    print_error "Docker build failed or timed out after 10 minutes"
-    print_error "Last 50 lines of build output:"
+# Build and start services with timeout protection
+timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build 2>&1 | tee /tmp/docker-build.log || {
+    print_error "Docker build/start failed or timed out after 10 minutes"
+    print_error "Last 50 lines of output:"
     tail -n 50 /tmp/docker-build.log
     print_error ""
-    print_error "Full build log saved to: /tmp/docker-build.log"
+    print_error "Full log saved to: /tmp/docker-build.log"
     print_error ""
     print_error "Common issues and solutions:"
     print_error "1. NX hanging: Check if NX daemon is disabled (ENV NX_DAEMON false)"
@@ -175,11 +175,7 @@ timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml buil
     exit 1
 }
 
-print_success "Docker images built successfully!"
-
-# Now start the services (images are already built)
-print_status "🚀 Starting services..."
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+print_success "Services built!"
 
 # Wait for services to be ready
 print_status "⏳ Waiting for services to start..."
