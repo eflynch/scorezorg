@@ -17,7 +17,7 @@ export function LeagueProvider({
   useEffect(() => {
     const fetchLeague = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/api/league/${slug}`);
+        const res = await fetch(`/api/league/${slug}`);
         const data = await res.json();
         if (res.status !== 200) {
           throw new Error(data.error || 'Failed to fetch league data');
