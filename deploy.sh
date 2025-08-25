@@ -129,8 +129,57 @@ else
 fi
 
 # Generate secure database password
-DB_PASSWORD=$(generate_password)
-print_status "🔐 Generating secure database password..."
+print_status "🔐 Configuring database password..."
+
+# Check if we already have a password
+if [ -f ".env" ]; then
+    EXISTING_PASSWORD=$(grep "DB_PASSWORD=" .env 2>/dev/null | cut -d= -f2 || echo "")
+    if [ ! -z "$EXISTING_PASSWORD" ]; then
+        print_status "🔍 Found existing database password"
+        echo ""
+        echo -e "${YELLOW}Password Options:${NC}"
+        echo "1. Keep existing password (recommended for existing deployments)"
+        echo "2. Generate new password (will reset database and lose all data)"
+        echo ""
+        read -p "Choose option (1 or 2) [default: 1]: " PASSWORD_CHOICE
+        
+        if [ "$PASSWORD_CHOICE" = "2" ]; then
+            DB_PASSWORD=$(generate_password)
+            print_warning "⚠️ New password generated - database will be reset!"
+        else
+            DB_PASSWORD="$EXISTING_PASSWORD"
+            print_success "🔒 Using existing password - data will be preserved"
+        fi
+    else
+        DB_PASSWORD=$(generate_password)
+        print_status "🔐 Generating new secure password..."
+    fi
+else
+    DB_PASSWORD=$(generate_password)
+    print_status "🔐 Generating secure password for first deployment..."
+fi
+
+# Check if we need to reset the database due to password changes (BEFORE creating new .env)
+DB_VOLUME_NAME="scorezorg_postgres_data"
+RESET_DB=false
+
+if docker volume inspect "$DB_VOLUME_NAME" >/dev/null 2>&1; then
+    print_status "🔍 Checking for database password changes..."
+    
+    # Get the OLD password from existing .env file if it exists
+    if [ -f ".env" ]; then
+        OLD_PASSWORD=$(grep "DB_PASSWORD=" .env 2>/dev/null | cut -d= -f2 || echo "")
+        if [ "$OLD_PASSWORD" != "$DB_PASSWORD" ] && [ ! -z "$OLD_PASSWORD" ]; then
+            print_warning "⚠️ Database password has changed!"
+            print_warning "Will reset database volume to prevent authentication errors..."
+            RESET_DB=true
+        else
+            print_status "🔒 Database password unchanged, keeping existing data"
+        fi
+    else
+        print_status "📦 First deployment - database will be initialized fresh"
+    fi
+fi
 
 # Create environment file
 print_status "⚙️ Creating production environment configuration..."
@@ -154,23 +203,11 @@ if docker compose ps >/dev/null 2>&1 && docker compose ps | grep -q "Up"; then
     docker compose down
 fi
 
-# Check if we need to reset the database due to password changes
-DB_VOLUME_NAME="scorezorg_postgres_data"
-if docker volume inspect "$DB_VOLUME_NAME" >/dev/null 2>&1; then
-    print_status "🔍 Checking for database password changes..."
-    
-    # Get the current password from .env if it exists
-    if [ -f ".env" ]; then
-        OLD_PASSWORD=$(grep "DB_PASSWORD=" .env 2>/dev/null | cut -d= -f2 || echo "")
-        if [ "$OLD_PASSWORD" != "$DB_PASSWORD" ]; then
-            print_warning "⚠️ Database password has changed!"
-            print_warning "Removing existing database volume to prevent authentication errors..."
-            docker volume rm "$DB_VOLUME_NAME" || true
-            print_success "Database volume reset for new password"
-        fi
-    else
-        print_status "📦 First deployment - database will be initialized fresh"
-    fi
+# Reset database volume if password changed
+if [ "$RESET_DB" = true ]; then
+    print_warning "🗑️ Removing existing database volume..."
+    docker volume rm "$DB_VOLUME_NAME" || true
+    print_success "Database volume reset for new password"
 fi
 
 # Build and start services in one step
