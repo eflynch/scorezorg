@@ -2,9 +2,11 @@ import update from 'immutability-helper';
 import { useContext } from 'react';
 import { LeagueContext } from '@/app/contexts';
 import { BracketMatch, Player, Score } from '@/app/types';
+import { usePlayerStats } from '@/app/hooks';
 
 export const useBracketOperations = (bracketId: string) => {
   const { league, updateLeague } = useContext(LeagueContext);
+  const { playerRankings } = usePlayerStats(league);
   const bracket = league?.brackets.find(b => b.id === bracketId);
 
   const updateBracketName = (newName: string) => {
@@ -133,17 +135,35 @@ export const useBracketOperations = (bracketId: string) => {
     // Calculate the next power of 2
     const nextPowerOf2 = Math.pow(2, Math.ceil(Math.log2(bracketPlayers.length)));
     
-    // Shuffle players for random seeding
-    const shuffledPlayers = [...bracketPlayers].sort(() => Math.random() - 0.5);
+    // Sort players by current ranking (best players get lowest seed numbers)
+    const rankedPlayers = [...bracketPlayers].sort((a, b) => {
+      const aRanking = playerRankings.find(r => r.stats.playerId === a.id);
+      const bRanking = playerRankings.find(r => r.stats.playerId === b.id);
+      
+      // If both players have rankings, sort by rank (lower rank number = better)
+      if (aRanking && bRanking) {
+        return aRanking.rank - bRanking.rank;
+      }
+      
+      // Players with rankings come before players without rankings
+      if (aRanking && !bRanking) return -1;
+      if (!aRanking && bRanking) return 1;
+      
+      // If neither has rankings, maintain original order
+      return 0;
+    });
     
-    // Create seedings
-    const seedings = shuffledPlayers.map((player, index) => ({
+    // Create seedings based on ranking
+    const seedings = rankedPlayers.map((player, index) => ({
       playerId: player.id,
       seed: index + 1
     }));
 
+    // Apply proper tournament seeding order (1 vs 8, 2 vs 7, 3 vs 6, 4 vs 5 in an 8-player bracket)
+    const seededPlayers = applyTournamentSeeding(rankedPlayers);
+
     // Pad with "bye" players if needed
-    const playersWithByes = [...shuffledPlayers];
+    const playersWithByes = [...seededPlayers];
     while (playersWithByes.length < nextPowerOf2) {
       playersWithByes.push({ id: `bye-${playersWithByes.length}`, name: 'BYE' });
     }
@@ -246,4 +266,58 @@ const buildTournamentTree = (players: Player[], round: number): BracketMatch => 
     round: round + Math.log2(players.length) - 1,
     position: 0
   };
+};
+
+/**
+ * Apply proper tournament seeding order where top seeds avoid each other until later rounds
+ * For example: 1v8, 2v7, 3v6, 4v5 in first round of 8-player tournament
+ */
+const applyTournamentSeeding = (rankedPlayers: Player[]): Player[] => {
+  const numPlayers = rankedPlayers.length;
+  
+  // For small tournaments, just return ranked order
+  if (numPlayers <= 2) {
+    return rankedPlayers;
+  }
+  
+  // Calculate bracket size (next power of 2)
+  const bracketSize = Math.pow(2, Math.ceil(Math.log2(numPlayers)));
+  
+  // Generate seeding pattern for the bracket size
+  const seedingOrder = generateSeedingOrder(bracketSize);
+  
+  // Apply the seeding order to our players
+  const seededPlayers: Player[] = [];
+  for (let i = 0; i < bracketSize; i++) {
+    const seedIndex = seedingOrder[i] - 1; // Convert from 1-based to 0-based
+    if (seedIndex < rankedPlayers.length) {
+      seededPlayers.push(rankedPlayers[seedIndex]);
+    }
+  }
+  
+  return seededPlayers;
+};
+
+/**
+ * Generate the seeding order for a tournament bracket
+ * This ensures top seeds are separated until later rounds
+ */
+const generateSeedingOrder = (bracketSize: number): number[] => {
+  if (bracketSize === 2) {
+    return [1, 2];
+  }
+  
+  const halfSize = bracketSize / 2;
+  const firstHalf = generateSeedingOrder(halfSize);
+  const secondHalf = generateSeedingOrder(halfSize);
+  
+  // Reverse the second half and add the offset
+  const result: number[] = [];
+  
+  for (let i = 0; i < halfSize; i++) {
+    result.push(firstHalf[i]);
+    result.push(bracketSize + 1 - secondHalf[i]);
+  }
+  
+  return result;
 };

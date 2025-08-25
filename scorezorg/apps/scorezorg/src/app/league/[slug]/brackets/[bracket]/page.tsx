@@ -116,7 +116,12 @@ export default function BracketPage({ params }: { params: Promise<{ slug: string
       {/* Tournament Generation */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Tournament</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Tournament</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Seedings are automatically based on current player rankings
+            </p>
+          </div>
           {!bracket.finalMatch ? (
             <button
               onClick={() => generateTournament(bracketPlayers)}
