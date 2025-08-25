@@ -1,40 +1,46 @@
 # Production Docker Compose Override
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
-# Note: In real production, you'll typically use managed database services
-# and deploy containers to orchestration platforms like Kubernetes or ECS
+# Optimized for DigitalOcean VPS deployment
 
 version: '3.8'
 
 services:
   # Production database with SSL enabled
   postgres:
-    # In production, you might use a managed database service instead
-    # This is just for demonstration if you're self-hosting PostgreSQL
     environment:
-      # Enable SSL in PostgreSQL
+      # Enable SSL in PostgreSQL for production
       POSTGRES_INITDB_ARGS: "--ssl=on"
     volumes:
-      # Add SSL certificates in production
-      # - ./certs/server.crt:/var/lib/postgresql/server.crt
-      # - ./certs/server.key:/var/lib/postgresql/server.key
+      # Use named volume for data persistence
       - postgres_data:/var/lib/postgresql/data
+      # Load production schema
       - ./apps/scorezorg/database/production-schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
 
-  # Production application
+  # Production application configuration
   app:
     environment:
       NODE_ENV: production
       # Enable SSL for production database connections
       SSL_MODE: require
-      # In production, you might use an external managed database:
-      # DATABASE_URL: postgresql://user:pass@external-db.amazonaws.com:5432/db?sslmode=require
-    # Remove port mapping in production (use reverse proxy)
-    ports: []
-    # Add production-specific configurations
+    # Keep port mapping for VPS deployment (Nginx will proxy to this)
+    ports:
+      - "3000:3000"
+    # Production resource limits
     deploy:
-      replicas: 2
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    restart: unless-stopped
+    # Health check for production monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
