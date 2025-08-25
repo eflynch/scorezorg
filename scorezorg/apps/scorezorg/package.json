@@ -1,0 +1,17 @@
+{
+  "name": "@scorezorg/scorezorg",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "generate-schemas": "node generate-schemas.js"
+  },
+  "dependencies": {
+    "next": "~15.2.4",
+    "random-words": "^2.0.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/random-words": "^1.1.4"
+  }
+}

@@ -1,0 +1,423 @@
+// Auto-generated schema definitions
+// Run `npm run generate-schemas` to regenerate
+
+export const leagueSchema = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Score": {
+      "anyOf": [
+        {
+          "properties": {
+            "sets": {
+              "items": {
+                "properties": {
+                  "games": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  },
+                  "tiebreak": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "games"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "sets"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "points": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "points"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "properties": {
+    "brackets": {
+      "items": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "players": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rounds": {
+            "items": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "matches": {
+                  "items": {
+                    "properties": {
+                      "date": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "players": {
+                        "items": {
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "scores": {
+                        "$ref": "#/definitions/Score"
+                      },
+                      "winner": {
+                        "anyOf": [
+                          {
+                            "const": "draw",
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "players"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "matches",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "seedings": {
+            "items": {
+              "properties": {
+                "playerId": {
+                  "type": "string"
+                },
+                "seed": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "playerId",
+                "seed"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "players",
+          "rounds",
+          "seedings"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "players": {
+      "items": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "seasons": {
+      "items": {
+        "properties": {
+          "endDate": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "matches": {
+            "items": {
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "players": {
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "scores": {
+                  "$ref": "#/definitions/Score"
+                },
+                "winner": {
+                  "anyOf": [
+                    {
+                      "const": "draw",
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "players"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "players": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "sport": {
+            "enum": [
+              "other",
+              "ping-pong",
+              "simple",
+              "tennis"
+            ],
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "endDate",
+          "id",
+          "matches",
+          "name",
+          "players",
+          "startDate"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brackets",
+    "createdAt",
+    "name",
+    "players",
+    "seasons",
+    "slug",
+    "updatedAt"
+  ],
+  "type": "object"
+} as const;
+
+export const playerSchema = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "name"
+  ],
+  "type": "object"
+} as const;
+
+export const matchSchema = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Score": {
+      "anyOf": [
+        {
+          "properties": {
+            "sets": {
+              "items": {
+                "properties": {
+                  "games": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  },
+                  "tiebreak": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "games"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "sets"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "points": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "points"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "properties": {
+    "date": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "players": {
+      "items": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "scores": {
+      "$ref": "#/definitions/Score"
+    },
+    "winner": {
+      "anyOf": [
+        {
+          "const": "draw",
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "players"
+  ],
+  "type": "object"
+} as const;
