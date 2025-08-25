@@ -11,7 +11,7 @@
     "docker:build": "docker build -t scorezorg .",
     "docker:run": "docker-compose up -d",
     "docker:stop": "docker-compose down",
-    "deploy:build": "NODE_ENV=production npm run build",
+    "deploy:build": "NODE_ENV=production NX_DAEMON=false NX_CLOUD=false npm run build",
     "db:migrate": "node scripts/migrate.js"
   },
   "private": true,
