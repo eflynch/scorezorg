@@ -12,7 +12,8 @@ export function TabNavigation({ slug }: TabNavigationProps) {
   const tabs = [
     { key: 'players', label: 'Players', path: `/league/${slug}/players` },
     { key: 'seasons', label: 'Seasons', path: `/league/${slug}/seasons` },
-    { key: 'brackets', label: 'Brackets', path: `/league/${slug}/brackets` }
+    { key: 'brackets', label: 'Brackets', path: `/league/${slug}/brackets` },
+    { key: 'admin', label: 'Admin', path: `/league/${slug}/admin` }
   ];
 
   const isActive = (path: string) => pathname === path;

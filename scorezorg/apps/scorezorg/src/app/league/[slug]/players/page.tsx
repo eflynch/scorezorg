@@ -3,12 +3,96 @@ import { use, useContext, useState } from "react";
 import { LeagueContext } from "@/app/contexts";
 import { TabNavigation } from "@/app/components";
 import { usePlayerStats } from "@/app/hooks";
+import { BracketMatch } from "@/app/types";
 
 export default function PlayersPage({ params }: { params: Promise<{ slug: string }> }) {
   const { league, updateLeague} = useContext(LeagueContext);
   const { slug } = use(params);
   const [showRankings, setShowRankings] = useState(false);
   const { playerRankings, hasData } = usePlayerStats(league);
+
+  const handleDeletePlayer = async (playerId: string, playerName: string) => {
+    if (!updateLeague) return;
+
+    const confirmMessage = `Are you sure you want to delete "${playerName}"?\n\nThis will:\n- Remove the player from the league\n- Remove all their match history from seasons\n- Remove them from all brackets and tournament seedings\n- Remove any bracket matches they participated in\n- This action cannot be undone\n\nType "DELETE" to confirm.`;
+    
+    const userInput = prompt(confirmMessage);
+    
+    if (userInput !== "DELETE") {
+      if (userInput !== null) {
+        alert('Player deletion cancelled. You must type "DELETE" exactly to confirm.');
+      }
+      return;
+    }
+
+    // Helper function to recursively remove player from bracket matches
+    const removeBracketMatches = (bracketMatch?: BracketMatch): BracketMatch | undefined => {
+      if (!bracketMatch) return undefined;
+      
+      // Check if this match contains the player being deleted
+      const matchContainsPlayer = bracketMatch.match?.players?.some(player => player.id === playerId);
+      
+      // If this match contains the player, remove the entire match
+      if (matchContainsPlayer) {
+        return undefined;
+      }
+      
+      // Recursively process children
+      const newMatch = { ...bracketMatch };
+      if (bracketMatch.children) {
+        const leftChild = removeBracketMatches(bracketMatch.children[0]);
+        const rightChild = removeBracketMatches(bracketMatch.children[1]);
+        
+        // If both children are removed, remove this match too
+        if (!leftChild && !rightChild) {
+          return undefined;
+        }
+        
+        // Update children array, filtering out undefined values
+        const newChildren = [leftChild, rightChild].filter(child => child !== undefined);
+        if (newChildren.length === 2) {
+          newMatch.children = newChildren as [BracketMatch, BracketMatch];
+        } else if (newChildren.length === 1) {
+          // If only one child remains, we might want to restructure or handle this case
+          // For now, we'll keep the match but without children
+          delete newMatch.children;
+        } else {
+          delete newMatch.children;
+        }
+      }
+      
+      return newMatch;
+    };
+
+    try {
+      await updateLeague((league) => ({
+        ...league,
+        players: league.players.filter(player => player.id !== playerId),
+        // Remove from all seasons and matches
+        seasons: league.seasons.map(season => ({
+          ...season,
+          matches: season.matches.filter(match => 
+            !match.players.some(player => player.id === playerId)
+          )
+        })),
+        // Remove from all brackets
+        brackets: league.brackets.map(bracket => ({
+          ...bracket,
+          // Remove from bracket players list
+          players: bracket.players.filter(id => id !== playerId),
+          // Remove from seedings
+          seedings: bracket.seedings.filter(seeding => seeding.playerId !== playerId),
+          // Remove from bracket matches
+          finalMatch: removeBracketMatches(bracket.finalMatch)
+        }))
+      }));
+      
+      alert(`Player "${playerName}" has been successfully deleted.`);
+    } catch (error) {
+      console.error('Failed to delete player:', error);
+      alert('Failed to delete player. Please try again.');
+    }
+  };
 
   return (
     <div>
@@ -39,6 +123,7 @@ export default function PlayersPage({ params }: { params: Promise<{ slug: string
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Win Rate</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Score</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Streak</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -96,6 +181,15 @@ export default function PlayersPage({ params }: { params: Promise<{ slug: string
                           Best: W{ranking.stats.winStreak}
                         </div>
                       </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleDeletePlayer(ranking.stats.playerId, ranking.stats.playerName)}
+                          className="px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                          title="Delete player"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -107,26 +201,37 @@ export default function PlayersPage({ params }: { params: Promise<{ slug: string
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {league?.players.map(player => (
                 <div key={player.id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
-                  <a
-                    href={`/league/${slug}/players/${player.id}`}
-                    className="text-lg font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    {player.name}
-                  </a>
-                  {hasData && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      {(() => {
-                        const playerRanking = playerRankings.find(r => r.stats.playerId === player.id);
-                        if (!playerRanking) return <span>No matches yet</span>;
-                        return (
-                          <div>
-                            <div>Rank #{playerRanking.rank}</div>
-                            <div>{playerRanking.stats.totalMatches} matches • {(playerRanking.stats.winRate * 100).toFixed(1)}% win rate</div>
-                          </div>
-                        );
-                      })()}
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <a
+                        href={`/league/${slug}/players/${player.id}`}
+                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {player.name}
+                      </a>
+                      {hasData && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          {(() => {
+                            const playerRanking = playerRankings.find(r => r.stats.playerId === player.id);
+                            if (!playerRanking) return <span>No matches yet</span>;
+                            return (
+                              <div>
+                                <div>Rank #{playerRanking.rank}</div>
+                                <div>{playerRanking.stats.totalMatches} matches • {(playerRanking.stats.winRate * 100).toFixed(1)}% win rate</div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
-                  )}
+                    <button
+                      onClick={() => handleDeletePlayer(player.id, player.name)}
+                      className="ml-2 px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                      title="Delete player"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
