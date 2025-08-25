@@ -153,11 +153,11 @@ if docker compose ps >/dev/null 2>&1 && docker compose ps | grep -q "Up"; then
 fi
 
 # Build and start services
-print_status "🏗️ Building and starting services..."
+print_status "🏗️ Building Docker images..."
 print_status "This may take several minutes for the first build..."
 
-# Build with verbose output and timeout
-timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --progress=plain 2>&1 | tee /tmp/docker-build.log || {
+# First, build the images (this will wait for completion)
+timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml build --progress=plain 2>&1 | tee /tmp/docker-build.log || {
     print_error "Docker build failed or timed out after 10 minutes"
     print_error "Last 50 lines of build output:"
     tail -n 50 /tmp/docker-build.log
@@ -171,6 +171,12 @@ timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -
     print_error "4. Build cache issues: Run 'docker system prune -f' and retry"
     exit 1
 }
+
+print_success "Docker images built successfully!"
+
+# Now start the services (images are already built)
+print_status "🚀 Starting services..."
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Wait for services to be ready
 print_status "⏳ Waiting for services to start..."
