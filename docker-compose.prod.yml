@@ -1,5 +1,7 @@
 # Production Docker Compose Override
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+# Note: In real production, you'll typically use managed database services
+# and deploy containers to orchestration platforms like Kubernetes or ECS
 
 version: '3.8'
 
