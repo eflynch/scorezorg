@@ -3,6 +3,24 @@ import { use, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { LeagueContext } from "../league-context";
 import TabNavigation from "../tab-navigation";
+import { BracketMatch } from "@/app/types";
+
+// Helper function to count rounds in a tournament tree
+const countRounds = (finalMatch: BracketMatch | undefined): number => {
+  if (!finalMatch) return 0;
+  
+  const getAllRounds = (match: BracketMatch): number[] => {
+    const rounds = [match.round];
+    if (match.children) {
+      rounds.push(...getAllRounds(match.children[0]));
+      rounds.push(...getAllRounds(match.children[1]));
+    }
+    return rounds;
+  };
+  
+  const allRounds = getAllRounds(finalMatch);
+  return Math.max(...allRounds);
+};
 
 export default function BracketsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { league, updateLeague } = useContext(LeagueContext);
@@ -23,7 +41,7 @@ export default function BracketsPage({ params }: { params: Promise<{ slug: strin
               <div className="flex justify-between items-center">
                 <span className="font-medium">{bracket.name}</span>
                 <span className="text-gray-500 text-xs">
-                  {bracket.rounds?.length || 0} rounds • {bracket.players.length} players
+                  {countRounds(bracket.finalMatch)} rounds • {bracket.players.length} players
                 </span>
               </div>
             </button>
@@ -36,8 +54,7 @@ export default function BracketsPage({ params }: { params: Promise<{ slug: strin
             brackets: [...(league.brackets || []), {
                 id: String(Date.now()),
                 name: 'New Bracket',
-                rounds: [],
-                players: league.players.map(p => p.id), // Initialize with all league players
+                players: [], // Start with empty players list
                 seedings: []
             }] 
           }))}
