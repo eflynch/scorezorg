@@ -41,6 +41,28 @@ generate_password() {
 
 print_status "🚀 Starting Scorezorg deployment on DigitalOcean VPS..."
 
+# Get server IP
+SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || curl -s icanhazip.com)
+print_status "🌍 Detected server IP: $SERVER_IP"
+
+# Ask for domain (optional)
+echo ""
+echo -e "${YELLOW}CORS Configuration:${NC}"
+echo "For security, we'll configure CORS to only allow requests from your domain/IP."
+echo ""
+read -p "Enter your domain name (e.g., yourdomain.com) or press Enter to use IP only: " DOMAIN_NAME
+
+# Build allowed origins list
+ALLOWED_ORIGINS="http://$SERVER_IP"
+if [ ! -z "$DOMAIN_NAME" ]; then
+    # Remove protocol if user included it
+    DOMAIN_NAME=$(echo "$DOMAIN_NAME" | sed 's|^https\?://||')
+    ALLOWED_ORIGINS="$ALLOWED_ORIGINS,https://$DOMAIN_NAME,http://$DOMAIN_NAME"
+    print_status "🔒 CORS will allow: IP ($SERVER_IP) and domain ($DOMAIN_NAME)"
+else
+    print_status "🔒 CORS will allow: IP ($SERVER_IP) only"
+fi
+
 # Check if running as root
 if [[ $EUID -ne 0 ]]; then
    print_error "This script must be run as root (use sudo)"
@@ -105,7 +127,10 @@ cat > .env << EOF
 # Production environment variables
 DB_PASSWORD=$DB_PASSWORD
 SSL_MODE=require
+ALLOWED_ORIGINS=$ALLOWED_ORIGINS
 EOF
+
+print_status "🔒 CORS configured for: $ALLOWED_ORIGINS"
 
 chmod 600 .env
 print_success "Environment file created with secure password"
@@ -236,7 +261,14 @@ echo ""
 print_success "✅ Scorezorg successfully deployed!"
 echo ""
 echo -e "${GREEN}🌐 Your app is now live at: ${BLUE}http://$SERVER_IP${NC}"
+if [ ! -z "$DOMAIN_NAME" ]; then
+    echo -e "${GREEN}🌐 Also available at: ${BLUE}https://$DOMAIN_NAME${NC} (after SSL setup)"
+fi
 echo -e "${GREEN}🔍 Health check: ${BLUE}http://$SERVER_IP/api/health${NC}"
+echo ""
+echo -e "${YELLOW}🔒 CORS Security:${NC}"
+echo -e "${GREEN}  • Allowed origins: ${BLUE}$ALLOWED_ORIGINS${NC}"
+echo -e "${GREEN}  • Only these domains/IPs can access your API${NC}"
 echo ""
 echo -e "${YELLOW}📊 Useful commands:${NC}"
 echo -e "  • View logs: ${BLUE}docker compose logs -f${NC}"

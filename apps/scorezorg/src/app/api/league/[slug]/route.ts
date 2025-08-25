@@ -20,6 +20,10 @@ const getLeagueData = async (slug: string) => {
         throw new Error('Failed to fetch league data');
     }
 }
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, { status: 405 });
+}
 export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }

@@ -27,6 +27,10 @@ const createLeague = async (slug: string, content: League) => {
     }
 }
 
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, { status: 405 });
+}
+
 // Post
 export async function POST(request: NextRequest) {
     // add a new league to the database
@@ -48,6 +52,7 @@ export async function POST(request: NextRequest) {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         });
+        
         return new NextResponse(
             JSON.stringify(newLeague), 
             {

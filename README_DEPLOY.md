@@ -30,11 +30,24 @@ That's it! 🎉
 - ✅ Configures Nginx reverse proxy
 - ✅ Sets up auto-restart service
 - ✅ Tests the deployment
+- ✅ Configures CORS for your specific domain/IP
 
 ### After Deployment:
 - **Your app**: http://YOUR_DROPLET_IP
 - **Health check**: http://YOUR_DROPLET_IP/api/health
 - **Cost**: $6/month
+- **CORS**: Restricted to your specified domains/IPs for security
+
+### Update CORS Settings:
+If you need to add more domains later:
+```bash
+# SSH into your droplet
+ssh root@YOUR_DROPLET_IP
+cd /root/scorezorg
+
+# Run the CORS update script
+./update-cors.sh
+```
 
 ### Useful Commands:
 ```bash

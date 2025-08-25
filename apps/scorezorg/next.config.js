@@ -22,6 +22,9 @@ const nextConfig = {
   
   // Security headers
   async headers() {
+    // Get allowed origins from environment variable, fallback to '*' for dev
+    const allowedOrigins = process.env.ALLOWED_ORIGINS || '*';
+    
     return [
       {
         source: '/(.*)',
@@ -37,6 +40,24 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          }
+        ]
+      },
+      {
+        // CORS headers for API routes
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: allowedOrigins
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
           }
         ]
       }
