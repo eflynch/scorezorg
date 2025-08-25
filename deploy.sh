@@ -256,10 +256,19 @@ print_status "🌐 Configuring Nginx reverse proxy..."
 # Get server IP
 SERVER_IP=$(curl -s ifconfig.me)
 
+# Build server_name directive (include domain if provided)
+if [ ! -z "$DOMAIN_NAME" ]; then
+    SERVER_NAMES="$DOMAIN_NAME www.$DOMAIN_NAME $SERVER_IP"
+    print_status "🌐 Configuring for domain: $DOMAIN_NAME and IP: $SERVER_IP"
+else
+    SERVER_NAMES="$SERVER_IP"
+    print_status "🌐 Configuring for IP only: $SERVER_IP"
+fi
+
 cat > /etc/nginx/sites-available/scorezorg << EOF
 server {
     listen 80;
-    server_name $SERVER_IP;
+    server_name $SERVER_NAMES;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
