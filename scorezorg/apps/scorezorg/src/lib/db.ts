@@ -2,14 +2,20 @@ import { Pool } from 'pg';
 
 // Create a connection pool
 const pool = new Pool({
+  // Use DATABASE_URL if available (preferred for production)
+  connectionString: process.env.DATABASE_URL,
+  // Fallback to individual environment variables
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'scorezorg',
   password: process.env.DB_PASSWORD || 'password',
   port: parseInt(process.env.DB_PORT || '5432'),
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 2000, // How long to wait when connecting a client
+  // Production optimizations
+  max: process.env.NODE_ENV === 'production' ? 10 : 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  // SSL configuration for production
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 // Helper function to execute queries

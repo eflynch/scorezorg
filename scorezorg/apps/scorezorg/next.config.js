@@ -1,6 +1,5 @@
 //@ts-check
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { composePlugins, withNx } = require('@nx/next');
 
 /**
@@ -8,8 +7,40 @@ const { composePlugins, withNx } = require('@nx/next');
  **/
 const nextConfig = {
   // Use this to set Nx-specific options
-  // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
+  
+  // Production optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Image optimization
+  images: {
+    formats: ['image/webp'],
+    domains: [], // Add any external image domains you use
+  },
+  
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          }
+        ]
+      }
+    ];
+  },
 };
 
 const plugins = [

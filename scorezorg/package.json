@@ -2,7 +2,18 @@
   "name": "@scorezorg/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "build": "nx build scorezorg",
+    "dev": "nx serve scorezorg",
+    "start": "nx start scorezorg",
+    "test": "nx test scorezorg",
+    "lint": "nx lint scorezorg",
+    "docker:build": "docker build -t scorezorg .",
+    "docker:run": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "deploy:build": "NODE_ENV=production npm run build",
+    "db:migrate": "node scripts/migrate.js"
+  },
   "private": true,
   "dependencies": {
     "@types/pg": "^8.15.5",
