@@ -139,6 +139,9 @@ cat > .env << EOF
 DB_PASSWORD=$DB_PASSWORD
 SSL_MODE=require
 ALLOWED_ORIGINS=$ALLOWED_ORIGINS
+# Disable Nx Cloud in production
+NX_CLOUD_DISTRIBUTED_EXECUTION=false
+NX_DAEMON=false
 EOF
 
 print_status "🔒 CORS configured for: $ALLOWED_ORIGINS"

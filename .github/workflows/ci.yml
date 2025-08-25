@@ -33,7 +33,11 @@ jobs:
 
       # Run linting and unit tests in parallel
       - name: Run linting
-        run: npx nx run-many -t lint --parallel=3
+        run: npx nx run-many -t lint --parallel=3 --skip-nx-cache
+        env:
+          NX_CLOUD_DISTRIBUTED_EXECUTION: false
 
       - name: Run unit tests
-        run: npx nx run-many -t test --parallel=3
+        run: npx nx run-many -t test --parallel=3 --skip-nx-cache
+        env:
+          NX_CLOUD_DISTRIBUTED_EXECUTION: false
