@@ -5,6 +5,16 @@
 
 set -e  # Exit on any error
 
+# Function to handle errors
+handle_error() {
+    print_error "❌ Deployment failed at line $1"
+    print_error "You can safely re-run this script to continue from where it left off"
+    exit 1
+}
+
+# Set up error trap
+trap 'handle_error $LINENO' ERR
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -40,6 +50,7 @@ generate_password() {
 }
 
 print_status "🚀 Starting Scorezorg deployment on DigitalOcean VPS..."
+print_status "💡 This script is safe to run multiple times if it fails partway through"
 
 # Get server IP
 SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || curl -s icanhazip.com)
@@ -136,7 +147,7 @@ chmod 600 .env
 print_success "Environment file created with secure password"
 
 # Stop existing containers if running
-if docker compose ps | grep -q "Up"; then
+if docker compose ps >/dev/null 2>&1 && docker compose ps | grep -q "Up"; then
     print_status "🛑 Stopping existing containers..."
     docker compose down
 fi
@@ -207,7 +218,8 @@ EOF
 
 # Enable site
 ln -sf /etc/nginx/sites-available/scorezorg /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
+# Remove default site (ignore errors if already removed)
+rm -f /etc/nginx/sites-enabled/default || true
 
 # Test and restart Nginx
 if nginx -t; then
@@ -221,6 +233,11 @@ fi
 
 # Create systemd service for auto-start
 print_status "🔄 Creating auto-start service..."
+# Stop service if it's running
+systemctl stop scorezorg.service >/dev/null 2>&1 || true
+# Disable service if it exists
+systemctl disable scorezorg.service >/dev/null 2>&1 || true
+
 cat > /etc/systemd/system/scorezorg.service << EOF
 [Unit]
 Description=Scorezorg Docker Compose
@@ -239,6 +256,8 @@ TimeoutStartSec=0
 WantedBy=multi-user.target
 EOF
 
+# Reload systemd and enable service
+systemctl daemon-reload
 systemctl enable scorezorg.service
 print_success "Auto-start service created"
 
@@ -274,6 +293,7 @@ echo -e "${YELLOW}📊 Useful commands:${NC}"
 echo -e "  • View logs: ${BLUE}docker compose logs -f${NC}"
 echo -e "  • Restart app: ${BLUE}docker compose restart app${NC}"
 echo -e "  • Update app: ${BLUE}cd $REPO_DIR && git pull && docker compose up -d --build${NC}"
+echo -e "  • Re-run deployment: ${BLUE}curl -fsSL https://raw.githubusercontent.com/eflynch/scorezorg/main/deploy.sh | bash${NC}"
 echo ""
 echo -e "${GREEN}🔐 Database password saved in: ${BLUE}$REPO_DIR/.env${NC}"
 echo ""
