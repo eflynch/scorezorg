@@ -154,9 +154,33 @@ if docker compose ps >/dev/null 2>&1 && docker compose ps | grep -q "Up"; then
     docker compose down
 fi
 
+# Check if we need to reset the database due to password changes
+DB_VOLUME_NAME="scorezorg_postgres_data"
+if docker volume inspect "$DB_VOLUME_NAME" >/dev/null 2>&1; then
+    print_status "🔍 Checking for database password changes..."
+    
+    # Get the current password from .env if it exists
+    if [ -f ".env" ]; then
+        OLD_PASSWORD=$(grep "DB_PASSWORD=" .env 2>/dev/null | cut -d= -f2 || echo "")
+        if [ "$OLD_PASSWORD" != "$DB_PASSWORD" ]; then
+            print_warning "⚠️ Database password has changed!"
+            print_warning "Removing existing database volume to prevent authentication errors..."
+            docker volume rm "$DB_VOLUME_NAME" || true
+            print_success "Database volume reset for new password"
+        fi
+    else
+        print_status "📦 First deployment - database will be initialized fresh"
+    fi
+fi
+
 # Build and start services in one step
 print_status "🏗️ Building and starting services..."
 print_status "This may take several minutes for the first build..."
+
+# Alternative: Uncomment the next 3 lines to ALWAYS reset the database (useful for development)
+# print_warning "🗑️ Force resetting database volume..."
+# docker volume rm "$DB_VOLUME_NAME" 2>/dev/null || true
+# print_success "Database volume reset"
 
 # Build and start services with timeout protection
 timeout 600 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build 2>&1 | tee /tmp/docker-build.log || {
