@@ -9,7 +9,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 COPY apps/scorezorg/package*.json ./apps/scorezorg/
-RUN npm ci --only=production
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -19,7 +19,7 @@ COPY . .
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED 1
-RUN npm run build --workspace=apps/scorezorg
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
@@ -36,7 +36,7 @@ RUN adduser --system --uid 1001 nextjs
 # Copy the built application
 COPY --from=builder /app/apps/scorezorg/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/scorezorg/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/scorezorg/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/scorezorg/.next/static ./apps/scorezorg/.next/static
 
 USER nextjs
 

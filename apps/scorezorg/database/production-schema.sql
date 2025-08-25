@@ -1,6 +1,9 @@
 -- Production database schema
 -- This should be run on your production database
 
+-- Enable pg_trgm extension for text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- Create leagues table with proper indexes
 CREATE TABLE IF NOT EXISTS leagues (
     id SERIAL PRIMARY KEY,
@@ -12,7 +15,7 @@ CREATE TABLE IF NOT EXISTS leagues (
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_leagues_slug ON leagues(slug);
-CREATE INDEX IF NOT EXISTS idx_leagues_content_name ON leagues USING GIN ((content->>'name'));
+CREATE INDEX IF NOT EXISTS idx_leagues_content_name ON leagues USING GIN ((content->>'name') gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_leagues_updated_at ON leagues(updated_at);
 
 -- Create a function to automatically update the updated_at column

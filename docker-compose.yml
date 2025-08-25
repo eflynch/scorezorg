@@ -10,9 +10,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./apps/scorezorg/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./apps/scorezorg/database/production-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U scorezorg"]
@@ -27,8 +27,8 @@ services:
       - ./apps/scorezorg/.env.production
     environment:
       NODE_ENV: production
-      # Override DATABASE_URL to use internal Docker networking
-      DATABASE_URL: postgresql://scorezorg:${DB_PASSWORD:-changeme}@postgres:5432/scorezorg
+      # Use environment variable to control SSL mode (disable for local, require for production)
+      DATABASE_URL: postgresql://scorezorg:${DB_PASSWORD:-changeme}@postgres:5432/scorezorg?sslmode=${SSL_MODE:-disable}
     ports:
       - "3000:3000"
     depends_on:

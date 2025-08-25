@@ -1,0 +1,38 @@
+# Production Docker Compose Override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+version: '3.8'
+
+services:
+  # Production database with SSL enabled
+  postgres:
+    # In production, you might use a managed database service instead
+    # This is just for demonstration if you're self-hosting PostgreSQL
+    environment:
+      # Enable SSL in PostgreSQL
+      POSTGRES_INITDB_ARGS: "--ssl=on"
+    volumes:
+      # Add SSL certificates in production
+      # - ./certs/server.crt:/var/lib/postgresql/server.crt
+      # - ./certs/server.key:/var/lib/postgresql/server.key
+      - postgres_data:/var/lib/postgresql/data
+      - ./apps/scorezorg/database/production-schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  # Production application
+  app:
+    environment:
+      NODE_ENV: production
+      # Enable SSL for production database connections
+      SSL_MODE: require
+      # In production, you might use an external managed database:
+      # DATABASE_URL: postgresql://user:pass@external-db.amazonaws.com:5432/db?sslmode=require
+    # Remove port mapping in production (use reverse proxy)
+    ports: []
+    # Add production-specific configurations
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M

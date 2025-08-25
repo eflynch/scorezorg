@@ -11,13 +11,45 @@
 
 ### Option 1: Docker Deployment (Recommended)
 
-1. **Clone and build:**
-   ```bash
-   git clone <your-repo>
-   cd scorezorg
-   
-   # Set up Docker Compose environment
-   cp .env.template .env
+#### Local Development
+```bash
+# Clone and set up for local development
+git clone <your-repo>
+cd scorezorg
+
+# Set up local environment (SSL disabled)
+cp .env.template .env
+# Edit .env: set DB_PASSWORD and SSL_MODE=disable
+
+# Start local development environment
+docker-compose up --build
+# Application: http://localhost:3000
+# Database: localhost:5433
+```
+
+#### Production Deployment
+```bash
+# Production deployment with SSL enabled
+git clone <your-repo>
+cd scorezorg
+
+# Set up production environment
+cp .env.template .env.prod
+# Edit .env.prod: set DB_PASSWORD and SSL_MODE=require
+
+# Deploy with production configuration
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# For external database (recommended for production)
+export DATABASE_URL="postgresql://user:pass@managed-db.provider.com:5432/db?sslmode=require"
+docker-compose up -d app
+```
+
+#### Production Considerations
+- **Managed Database**: Consider using AWS RDS, Google Cloud SQL, or similar instead of self-hosted PostgreSQL
+- **SSL Certificates**: The production setup assumes SSL certificates are properly configured
+- **Reverse Proxy**: Use nginx, Traefik, or cloud load balancer for HTTPS termination
+- **Secrets**: Use Docker secrets or environment variable injection for sensitive data
    # Edit .env with your database password
    
    # Set up application environment  

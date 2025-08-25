@@ -12,6 +12,7 @@ const nextConfig = {
   // Production optimizations
   compress: true,
   poweredByHeader: false,
+  output: 'standalone',
   
   // Image optimization
   images: {
